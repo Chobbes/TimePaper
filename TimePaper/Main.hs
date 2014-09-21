@@ -65,4 +65,4 @@ parseEntry line = TimeEntry (readTime defaultTimeLocale "%s" time) actions
 actionAmounts :: [TimeEntry] -> [(String, Double)]
 actionAmounts entries = (map (head &&& fromIntegral . length) . group . sort) acts
   where totalActions = length acts
-        acts = concat (map actions entries)
+        acts = concatMap actions entries
