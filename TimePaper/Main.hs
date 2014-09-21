@@ -63,7 +63,6 @@ parseEntry line = TimeEntry (readTime defaultTimeLocale "%s" time) actions
 -- | Get a list of actions, and the amount of times those actions
 -- | appear within the logs.
 actionAmounts :: [TimeEntry] -> [(String, Double)]
-actionAmounts entries = (map (head &&& percentage) . group . sort) acts
+actionAmounts entries = (map (head &&& fromIntegral . length) . group . sort) acts
   where totalActions = length acts
         acts = concat (map actions entries)
-        percentage n = 100 * (fromIntegral (length n)) / (fromIntegral totalActions)
