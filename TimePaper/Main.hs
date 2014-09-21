@@ -1,5 +1,3 @@
-#!/usr/bin/env runhaskell
-
 {- Copyright (C) 2014 Calvin Beck
 
    Permission is hereby granted, free of charge, to any person
