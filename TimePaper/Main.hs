@@ -39,7 +39,7 @@ data TimeEntry = TimeEntry { time :: ZonedTime
 
 main = do [logFile, outputFile] <- getArgs
           timeLog <- readFile logFile
-          makeChart outputFile (actionAmounts $ parseTimeLog timeLog)
+          makeChart outputFile (actionAmounts $ parseTimeLog timeLog) 
 
 -- | Simple pie chart stuff stolen from charts documentation.
 makeChart output values = toFile def output $ do
@@ -48,7 +48,7 @@ makeChart output values = toFile def output $ do
 
 -- | More chart stuff taken from: https://github.com/timbod7/haskell-chart/wiki/example%205
 pitem (s,v) = pitem_value .~ v
-            $ pitem_label .~ s
+            $ pitem_label .~ s ++ " - " ++ take 4 (show v) ++ "%"
             $ def
 
 -- | Parse a bunch of time log lines!
@@ -59,10 +59,11 @@ parseTimeLog = map parseEntry . lines
 parseEntry :: String -> TimeEntry
 parseEntry line = TimeEntry (readTime defaultTimeLocale "%s" time) actions
   where (time:actions) = (filter (/= "") . splitOn " " . takeWhile (/= '[')) line
-  
+
 -- | Get a list of actions, and the amount of times those actions
 -- | appear within the logs.
 actionAmounts :: [TimeEntry] -> [(String, Double)]
-actionAmounts entries = (map (head &&& fromIntegral . length) . group . sort) acts
+actionAmounts entries = (map (head &&& percentage) . group . sort) acts
   where totalActions = length acts
         acts = concatMap actions entries
+        percentage n = 100 * (fromIntegral . length) n / fromIntegral totalActions
