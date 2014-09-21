@@ -21,9 +21,13 @@
    SOFTWARE.
 -}
 
+import Control.Arrow
+import Data.List
 import Data.List.Split
 import Data.Time.Format
 import Data.Time.LocalTime
+import Graphics.Rendering.Chart.Easy
+import Graphics.Rendering.Chart.Backend.Diagrams
 import System.Environment
 import System.Locale
 
@@ -33,10 +37,19 @@ data TimeEntry = TimeEntry { time :: ZonedTime
                            }
                            deriving (Show)
 
-main = do [logFile] <- getArgs
+main = do [logFile, outputFile] <- getArgs
           timeLog <- readFile logFile
-          print (parseTimeLog timeLog)
+          makeChart outputFile (actionAmounts $ parseTimeLog timeLog)
 
+-- | Simple pie chart stuff stolen from charts documentation.
+makeChart output values = toFile def output $ do
+  pie_title .= "Time Spent"
+  pie_plot . pie_data .= map pitem values
+
+-- | More chart stuff taken from: https://github.com/timbod7/haskell-chart/wiki/example%205
+pitem (s,v) = pitem_value .~ v
+            $ pitem_label .~ s
+            $ def
 
 -- | Parse a bunch of time log lines!
 parseTimeLog :: String -> [TimeEntry]
@@ -46,4 +59,11 @@ parseTimeLog = map parseEntry . lines
 parseEntry :: String -> TimeEntry
 parseEntry line = TimeEntry (readTime defaultTimeLocale "%s" time) actions
   where (time:actions) = (filter (/= "") . splitOn " " . takeWhile (/= '[')) line
-
+  
+-- | Get a list of actions, and the amount of times those actions
+-- | appear within the logs.
+actionAmounts :: [TimeEntry] -> [(String, Double)]
+actionAmounts entries = (map (head &&& percentage) . group . sort) acts
+  where totalActions = length acts
+        acts = concat (map actions entries)
+        percentage n = 100 * (fromIntegral (length n)) / (fromIntegral totalActions)
