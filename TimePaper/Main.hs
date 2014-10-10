@@ -44,6 +44,7 @@ data TimeEntry = TimeEntry { time :: ZonedTime
 main :: IO ()
 main = mainWith timePaper
 
+-- | Reads a time log in order to generate a wallpaper.
 timePaper :: FilePath -> IO (Diagram B R2)
 timePaper logFile = do timeLog <- readFile logFile
                        return $ pad 1.5 $ timeTower 1.0 ((actionAmounts . parseTimeLog) timeLog)
