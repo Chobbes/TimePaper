@@ -21,15 +21,19 @@
    SOFTWARE.
 -}
 
-import Control.Arrow
+{-# LANGUAGE NoMonomorphismRestriction #-}
+
+import Control.Arrow hiding ((|||))
+import Data.Function
 import Data.List
 import Data.List.Split
 import Data.Time.Format
 import Data.Time.LocalTime
-import Graphics.Rendering.Chart.Easy
-import Graphics.Rendering.Chart.Backend.Diagrams
+import Diagrams.Backend.SVG.CmdLine
+import Diagrams.Prelude
 import System.Environment
 import System.Locale
+
 
 -- | Entry for time and actions.
 data TimeEntry = TimeEntry { time :: ZonedTime
@@ -37,19 +41,18 @@ data TimeEntry = TimeEntry { time :: ZonedTime
                            }
                            deriving (Show)
 
-main = do [logFile, outputFile] <- getArgs
-          timeLog <- readFile logFile
-          makeChart outputFile (actionAmounts $ parseTimeLog timeLog) 
+main :: IO ()
+main = mainWith timePaper
 
--- | Simple pie chart stuff stolen from charts documentation.
-makeChart output values = toFile def output $ do
-  pie_title .= "Time Spent"
-  pie_plot . pie_data .= map pitem values
+timePaper :: FilePath -> IO (Diagram B R2)
+timePaper logFile = do timeLog <- readFile logFile
+                       return $ timeTower 1.0 ((actionAmounts . parseTimeLog) timeLog)
 
--- | More chart stuff taken from: https://github.com/timbod7/haskell-chart/wiki/example%205
-pitem (s,v) = pitem_value .~ v
-            $ pitem_label .~ s ++ " - " ++ take 4 (show v) ++ "%"
-            $ def
+-- | Create a tower with time percentages
+timeTower :: Double -> [(String, Double)] -> Diagram B R2
+timeTower length entries = vcat [rect h 0.02 # fc c ||| alignedText 0 0.5 (show n) # scale 0.01 | (c,(n,h)) <- sorted]
+             where sorted = zip towerColours (sortBy (compare `on` snd) entries)
+                   towerColours = (concat . repeat) [red, yellow, green, blue, indigo, violet]
 
 -- | Parse a bunch of time log lines!
 parseTimeLog :: String -> [TimeEntry]
@@ -60,10 +63,10 @@ parseEntry :: String -> TimeEntry
 parseEntry line = TimeEntry (readTime defaultTimeLocale "%s" time) actions
   where (time:actions) = (filter (/= "") . splitOn " " . takeWhile (/= '[')) line
 
--- | Get a list of actions, and the amount of times those actions
--- | appear within the logs.
+-- | Get a list of actions with the probability of the action
+-- | throughout the day.
 actionAmounts :: [TimeEntry] -> [(String, Double)]
 actionAmounts entries = (map (head &&& percentage) . group . sort) acts
   where totalActions = length acts
         acts = concatMap actions entries
-        percentage n = 100 * (fromIntegral . length) n / fromIntegral totalActions
+        percentage n = (fromIntegral . length) n / fromIntegral totalActions
