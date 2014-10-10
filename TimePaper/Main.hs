@@ -46,11 +46,11 @@ main = mainWith timePaper
 
 timePaper :: FilePath -> IO (Diagram B R2)
 timePaper logFile = do timeLog <- readFile logFile
-                       return $ timeTower 1.0 ((actionAmounts . parseTimeLog) timeLog)
+                       return $ pad 1.5 $ timeTower 1.0 ((actionAmounts . parseTimeLog) timeLog)
 
 -- | Create a tower with time percentages
 timeTower :: Double -> [(String, Double)] -> Diagram B R2
-timeTower length entries = vcat [rect h 0.02 # fc c ||| alignedText 0 0.5 (show n) # scale 0.01 | (c,(n,h)) <- sorted]
+timeTower length entries = vcat [rect h 2 # fc c ||| strut 0.5 ||| alignedText 0 0.5 (n ++ " -- " ++ take 4 (show h) ++ "%") | (c,(n,h)) <- sorted]
              where sorted = zip towerColours (sortBy (compare `on` snd) entries)
                    towerColours = (concat . repeat) [red, yellow, green, blue, indigo, violet]
 
@@ -69,4 +69,4 @@ actionAmounts :: [TimeEntry] -> [(String, Double)]
 actionAmounts entries = (map (head &&& percentage) . group . sort) acts
   where totalActions = length acts
         acts = concatMap actions entries
-        percentage n = (fromIntegral . length) n / fromIntegral totalActions
+        percentage n = 100 * (fromIntegral . length) n / fromIntegral totalActions
