@@ -50,9 +50,13 @@ timePaper logFile = do timeLog <- readFile logFile
 
 -- | Create a tower with time percentages
 timeTower :: Double -> [(String, Double)] -> Diagram B R2
-timeTower length entries = vcat [rect h 2 # fc c ||| strut 0.5 ||| alignedText 0 0.5 (n ++ " -- " ++ take 4 (show h) ++ "%") | (c,(n,h)) <- sorted]
-             where sorted = zip towerColours (sortBy (compare `on` snd) entries)
+timeTower length entries = vcat tower
+             where sorted = sortBy (compare `on` snd) entries
+                   (names, percents) = unzip sorted
+                   blockLabel n h = alignedText 0 0.5 (n ++ " -- " ++ take 4 (show h) ++ "%")
+                   towerBlock c n h = rect h 2 # fc c ||| strut 0.5 ||| blockLabel n h
                    towerColours = (concat . repeat) [red, yellow, green, blue, indigo, violet]
+                   tower = zipWith3 towerBlock towerColours names percents
 
 -- | Parse a bunch of time log lines!
 parseTimeLog :: String -> [TimeEntry]
