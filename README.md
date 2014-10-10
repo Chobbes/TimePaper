@@ -10,7 +10,7 @@ how you spend your time! Currently it can be installed with
 
 You can then run the program as follows
 
-    TimePaper logFile outputFile.svg
+    TimePaper logFile -o test.svg -w 200
 
 This should produce an image much like this one!
 
