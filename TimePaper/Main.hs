@@ -23,50 +23,41 @@
 
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
+import TimePaper.Parser
+import TimePaper.TimeEntry
+
 import Control.Arrow hiding ((|||))
-import Data.Function
-import Data.List
-import Data.List.Split
-import Data.Time.Format
-import Data.Time.LocalTime
 import Diagrams.Backend.SVG.CmdLine
 import Diagrams.Prelude
 import System.Environment
 import System.Locale
+import Data.Attoparsec.Text hiding (take, takeWhile)
+import Data.List
+import Data.Function
+import Data.Text.IO as T
+import Data.Either
 
-
--- | Entry for time and actions.
-data TimeEntry = TimeEntry { time :: ZonedTime
-                           , actions :: [String]
-                           }
-                           deriving (Show)
 
 main :: IO ()
 main = mainWith timePaper
 
 -- | Reads a time log in order to generate a wallpaper.
 timePaper :: FilePath -> IO (Diagram B R2)
-timePaper logFile = do timeLog <- readFile logFile
-                       return $ pad 1.5 $ timeTower 1.0 ((actionAmounts . parseTimeLog) timeLog)
+timePaper logFile = do timeLog <- T.readFile logFile
+                       return . pad 1.5 . timeTower 1.0 $ (actionAmounts . takeRight . parseOnly parseTimeLog) timeLog
+                       where takeRight (Right a) = a
+                             takeRight (Left a) = []
 
 -- | Create a tower with time percentages
 timeTower :: Double -> [(String, Double)] -> Diagram B R2
 timeTower length entries = vcat tower
              where sorted = sortBy (compare `on` snd) entries
                    (names, percents) = unzip sorted
-                   blockLabel n h = alignedText 0 0.5 (n ++ " -- " ++ take 4 (show h) ++ "%")
-                   towerBlock c n h = rect h 2 # fc c ||| strut 0.5 ||| blockLabel n h
+                   blockLabel n h = alignedText 0 0.5 (n ++ " -- " ++ take 4 (show h) ++ "%") # showOrigin
+                   towerBlock c n h = rect h 2 # fc c ||| (strut 0.5 # showOrigin) ||| blockLabel n h
                    towerColours = (concat . repeat) [red, yellow, green, blue, indigo, violet]
                    tower = zipWith3 towerBlock towerColours names percents
 
--- | Parse a bunch of time log lines!
-parseTimeLog :: String -> [TimeEntry]
-parseTimeLog = map parseEntry . lines
-
--- | Parse a single line from the time log.
-parseEntry :: String -> TimeEntry
-parseEntry line = TimeEntry (readTime defaultTimeLocale "%s" time) actions
-  where (time:actions) = (filter (/= "") . splitOn " " . takeWhile (/= '[')) line
 
 -- | Get a list of actions with the probability of the action
 -- | throughout the day.
