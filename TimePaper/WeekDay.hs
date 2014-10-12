@@ -30,4 +30,4 @@ data WeekDay = Monday
              | Friday
              | Saturday
              | Sunday
-             deriving (Show, Eq, Ord)
+             deriving (Show, Eq, Ord, Enum)
