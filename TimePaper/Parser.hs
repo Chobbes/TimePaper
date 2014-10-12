@@ -21,6 +21,8 @@
    SOFTWARE.
 -}
 
+{-# LANGUAGE OverloadedStrings #-}
+
 module TimePaper.Parser (parseTimeLog) where
 
 import TimePaper.TimeEntry
