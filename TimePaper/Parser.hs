@@ -38,16 +38,22 @@ import Data.Time.LocalTime
 -- | Parse a bunch of time log lines!
 parseTimeLog :: Parser [TimeEntry]
 parseTimeLog = do entries <- many parseEntry
-                  endOfInput
                   return entries
 
 -- | Parse a single line from the time log.
 parseEntry :: Parser TimeEntry
 parseEntry = do epochTime <- decimal
                 skipSpace
-                actions <- many (many (notChar ' ') <* skipSpace)
+                actions <- many parseAction
                 (date, time, weekDay) <- parseTimeStamp
+                endOfLine
                 return (TimeEntry date time weekDay actions)
+
+parseAction :: Parser String
+parseAction = do action <- many (letter <|> digit)
+                 char ' '
+                 skipSpace
+                 return action
 
 -- [2014.09.20 02:40:53 Sat]
 parseDate :: Parser Day
