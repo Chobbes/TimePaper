@@ -21,7 +21,7 @@
    SOFTWARE.
 -}
 
-module TimePaper.Parser (parseEntry) where
+module TimePaper.Parser (parseTimeLog) where
 
 import TimePaper.TimeEntry
 import TimePaper.WeekDay
@@ -36,6 +36,7 @@ import Data.Time.LocalTime
 -- | Parse a bunch of time log lines!
 parseTimeLog :: Parser [TimeEntry]
 parseTimeLog = do entries <- many parseEntry
+                  endOfInput
                   return entries
 
 -- | Parse a single line from the time log.
