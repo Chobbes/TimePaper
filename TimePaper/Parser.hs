@@ -49,38 +49,14 @@ parseEntry = do epochTime <- decimal
                 endOfLine
                 return (TimeEntry date time weekDay actions)
 
+-- | Parsing of an action. These are just strings separated by spaces.
 parseAction :: Parser String
 parseAction = do action <- many (letter <|> digit)
                  char ' '
                  skipSpace
                  return action
-
--- [2014.09.20 02:40:53 Sat]
-parseDate :: Parser Day
-parseDate = do year <- decimal
-               char '.'
-               month <- decimal
-               char '.'
-               day <- decimal
-               return (fromGregorian year month day)
-
-parseTime :: Parser TimeOfDay
-parseTime = do hours <- decimal
-               char ':'
-               minutes <- decimal
-               char ':'
-               seconds <- decimal
-               return (TimeOfDay hours minutes (fromIntegral seconds))
-
-parseWeekDay :: Parser WeekDay
-parseWeekDay = do string "Mon"; return Monday
-           <|> do string "Tue"; return Tuesday
-           <|> do string "Wed"; return Wednesday
-           <|> do string "Thu"; return Thursday
-           <|> do string "Fri"; return Friday
-           <|> do string "Sat"; return Saturday
-           <|> do string "Sun"; return Sunday
-
+                 
+-- | Parse the timestamp for an entry in the log.
 parseTimeStamp :: Parser (Day, TimeOfDay, WeekDay)
 parseTimeStamp = do char '['
                     date <- parseDate
@@ -90,4 +66,32 @@ parseTimeStamp = do char '['
                     weekDay <- parseWeekDay
                     char ']'
                     return (date, time, weekDay)
+
+-- | Parse date strings with a format like: 2014.09.20
+parseDate :: Parser Day
+parseDate = do year <- decimal
+               char '.'
+               month <- decimal
+               char '.'
+               day <- decimal
+               return (fromGregorian year month day)
+
+-- | Parse the time of day.
+parseTime :: Parser TimeOfDay
+parseTime = do hours <- decimal
+               char ':'
+               minutes <- decimal
+               char ':'
+               seconds <- decimal
+               return (TimeOfDay hours minutes (fromIntegral seconds))
+
+-- | Parse the day of the week field.
+parseWeekDay :: Parser WeekDay
+parseWeekDay = do string "Mon"; return Monday
+           <|> do string "Tue"; return Tuesday
+           <|> do string "Wed"; return Wednesday
+           <|> do string "Thu"; return Thursday
+           <|> do string "Fri"; return Friday
+           <|> do string "Sat"; return Saturday
+           <|> do string "Sun"; return Sunday
 
