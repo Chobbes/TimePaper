@@ -30,4 +30,4 @@ data WeekDay = Monday
              | Friday
              | Saturday
              | Sunday
-             deriving (Show, Eq)
+             deriving (Show, Eq, Ord)
