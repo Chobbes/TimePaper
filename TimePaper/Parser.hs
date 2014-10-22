@@ -37,8 +37,7 @@ import Data.Time.LocalTime
 
 -- | Parse a bunch of time log lines!
 parseTimeLog :: Parser [TimeEntry]
-parseTimeLog = do entries <- many parseEntry
-                  return entries
+parseTimeLog = many parseEntry
 
 -- | Parse a single line from the time log.
 parseEntry :: Parser TimeEntry
